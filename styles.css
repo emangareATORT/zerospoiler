@@ -167,6 +167,7 @@ h1 {
 
 .match-card strong > span:not(.country-flags) {
   min-width: 0;
+  flex: 1 1 auto;
 }
 
 .country-flags {
@@ -182,6 +183,19 @@ h1 {
   place-items: center;
   width: 1.35em;
   height: 1.35em;
+}
+
+.duration-badge {
+  flex: 0 0 auto;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  padding: 4px 8px;
+  color: var(--accent-2);
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .match-card > span {
@@ -393,5 +407,10 @@ button:disabled {
 
   .current-selection {
     white-space: normal;
+  }
+
+  .match-card strong {
+    align-items: flex-start;
+    flex-wrap: wrap;
   }
 }
