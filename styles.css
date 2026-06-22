@@ -193,10 +193,7 @@ h1 {
 }
 
 .mask-top {
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 16%;
+  display: none;
 }
 
 .mask-bottom {
@@ -207,17 +204,11 @@ h1 {
 }
 
 .mask-left {
-  top: 16%;
-  left: 0;
-  width: 22%;
-  height: 20%;
+  display: none;
 }
 
 .mask-right {
-  top: 16%;
-  right: 0;
-  width: 22%;
-  height: 20%;
+  display: none;
 }
 
 .player-cover {
