@@ -58,7 +58,8 @@ function renderFlags(item: VideoItem): string {
 
 function selectedLabel(item: VideoItem): string {
   const flags = Array.isArray(item.countries) ? item.countries.map((country) => country.flag).join(" ") : "";
-  return `${flags ? `${flags} ` : ""}${item.safeTitle || "Partido seleccionado"}`;
+  const duration = item.duration ? ` · ${item.duration}` : "";
+  return `${flags ? `${flags} ` : ""}${item.safeTitle || "Partido seleccionado"}${duration}`;
 }
 
 function embedUrl(videoId: string, autoplay: boolean): string {
@@ -91,14 +92,14 @@ function renderList(items: VideoItem[], blockedCount = 0): void {
   }
 
   items.forEach((item, index) => {
-    const durationText = item.duration ? ` · duración ${item.duration}` : "";
+    const durationBadge = item.duration ? `<em class="duration-badge">Duración ${item.duration}</em>` : "";
     const button = document.createElement("button");
     button.type = "button";
     button.className = "match-card";
     button.dataset.videoId = item.id;
     button.innerHTML = `
-      <strong>${renderFlags(item)}<span>${item.safeTitle || `Resumen ${index + 1}`}</span></strong>
-      <span>${item.source || "Fuente segura"} · ${formatTime(item.publishedAt)}${durationText} · resumen ${index + 1}</span>
+      <strong>${renderFlags(item)}<span>${item.safeTitle || `Resumen ${index + 1}`}</span>${durationBadge}</strong>
+      <span>${item.source || "Fuente segura"} · ${formatTime(item.publishedAt)} · resumen ${index + 1}</span>
       <small>Seleccionar y reproducir</small>
     `;
     button.addEventListener("click", () => selectVideo(item, button));
@@ -115,7 +116,7 @@ function selectVideo(item: VideoItem, button: HTMLButtonElement): void {
   playPauseButton.disabled = false;
   audioButton.disabled = false;
   playPauseButton.textContent = "Reiniciar resumen";
-  audioButton.textContent = audioEnabled ? "Audio activado" : "Audio silenciado";
+  audioButton.textContent = audioEnabled ? "Audio: ON" : "Audio: OFF";
   currentSelection.textContent = selectedLabel(item);
   playSelected();
 }
@@ -134,7 +135,7 @@ function playSelected(): void {
 
 function toggleAudio(): void {
   audioEnabled = !audioEnabled;
-  audioButton.textContent = audioEnabled ? "Audio activado" : "Audio silenciado";
+  audioButton.textContent = audioEnabled ? "Audio: ON" : "Audio: OFF";
   if (selectedVideo && isPlaying) {
     youtubePlayer.src = embedUrl(selectedVideo.id, true);
   }
