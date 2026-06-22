@@ -24,7 +24,7 @@ const youtubePlayer = document.querySelector<HTMLIFrameElement>("#youtubePlayer"
 const playerCover = document.querySelector<HTMLDivElement>("#playerCover")!;
 const playPauseButton = document.querySelector<HTMLButtonElement>("#playPauseButton")!;
 const audioButton = document.querySelector<HTMLButtonElement>("#audioButton")!;
-const stopButton = document.querySelector<HTMLButtonElement>("#stopButton")!;
+const currentSelection = document.querySelector<HTMLDivElement>("#currentSelection")!;
 
 let selectedVideo: VideoItem | null = null;
 let isPlaying = false;
@@ -84,6 +84,7 @@ function renderList(items: VideoItem[], blockedCount = 0): void {
     button.innerHTML = `
       <strong>${item.safeTitle || `Resumen ${index + 1}`}</strong>
       <span>${item.source || "Fuente segura"} · ${formatTime(item.publishedAt)}${durationText} · resumen ${index + 1}</span>
+      <small>Seleccionar y reproducir</small>
     `;
     button.addEventListener("click", () => selectVideo(item, button));
     matchList.appendChild(button);
@@ -92,18 +93,16 @@ function renderList(items: VideoItem[], blockedCount = 0): void {
 
 function selectVideo(item: VideoItem, button: HTMLButtonElement): void {
   selectedVideo = item;
-  isPlaying = false;
   document.querySelectorAll(".match-card").forEach((card) => card.classList.remove("is-selected"));
   button.classList.add("is-selected");
   emptyState.classList.add("is-hidden");
   playerFrame.classList.remove("is-hidden");
-  youtubePlayer.src = "about:blank";
-  playerCover.classList.remove("is-clear");
   playPauseButton.disabled = false;
   audioButton.disabled = false;
-  stopButton.disabled = false;
-  playPauseButton.textContent = "Reproducir";
+  playPauseButton.textContent = "Reiniciar resumen";
   audioButton.textContent = audioEnabled ? "Audio activado" : "Audio silenciado";
+  currentSelection.textContent = item.safeTitle || "Partido seleccionado";
+  playSelected();
 }
 
 function playSelected(): void {
@@ -115,7 +114,7 @@ function playSelected(): void {
   coverTimer = window.setTimeout(() => {
     playerCover.classList.add("is-clear");
   }, 2600);
-  playPauseButton.textContent = "Reiniciar";
+  playPauseButton.textContent = "Reiniciar resumen";
 }
 
 function toggleAudio(): void {
@@ -124,20 +123,6 @@ function toggleAudio(): void {
   if (selectedVideo && isPlaying) {
     youtubePlayer.src = embedUrl(selectedVideo.id, true);
   }
-}
-
-function stopPlayback(): void {
-  window.clearTimeout(coverTimer);
-  youtubePlayer.src = "about:blank";
-  playerCover.classList.remove("is-clear");
-  playerFrame.classList.add("is-hidden");
-  emptyState.classList.remove("is-hidden");
-  playPauseButton.disabled = true;
-  audioButton.disabled = true;
-  stopButton.disabled = true;
-  selectedVideo = null;
-  isPlaying = false;
-  document.querySelectorAll(".match-card").forEach((card) => card.classList.remove("is-selected"));
 }
 
 async function loadVideos(): Promise<void> {
@@ -169,6 +154,5 @@ async function loadVideos(): Promise<void> {
 refreshButton.addEventListener("click", loadVideos);
 playPauseButton.addEventListener("click", playSelected);
 audioButton.addEventListener("click", toggleAudio);
-stopButton.addEventListener("click", stopPlayback);
 
 void loadVideos();
