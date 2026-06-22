@@ -3,9 +3,11 @@
   --bg: #111315;
   --panel: #181b1f;
   --panel-2: #20252a;
+  --panel-3: #252b31;
   --text: #f4f7f8;
   --muted: #aeb8bd;
   --line: #343b42;
+  --line-strong: #52616b;
   --accent: #37c77f;
   --accent-2: #8bd7ff;
   --danger: #ffcc66;
@@ -72,6 +74,16 @@ h1 {
   background: var(--panel-2);
   color: var(--text);
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.icon-button:hover,
+.icon-button:focus-visible {
+  border-color: var(--accent);
+  background: var(--panel-3);
+  outline: none;
 }
 
 .status-panel,
@@ -122,13 +134,26 @@ h1 {
   padding: 14px;
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
 }
 
 .match-card:hover,
 .match-card:focus-visible,
 .match-card.is-selected {
   border-color: var(--accent);
+  background: var(--panel-3);
   outline: none;
+}
+
+.match-card:hover {
+  transform: translateY(-1px);
+}
+
+.match-card.is-selected {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .match-card strong {
@@ -139,8 +164,18 @@ h1 {
 }
 
 .match-card span {
+  display: block;
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.match-card small {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 10px;
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 800;
 }
 
 .player-stage {
@@ -160,6 +195,7 @@ h1 {
   border-radius: 8px;
   background: #060708;
   overflow: hidden;
+  box-shadow: 0 18px 48px rgb(0 0 0 / 0.22);
 }
 
 .empty-state {
@@ -237,10 +273,25 @@ h1 {
 }
 
 .controls-bar {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
   align-items: center;
   gap: 12px;
-  flex-wrap: wrap;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #141719;
+  padding: 12px;
+}
+
+.current-selection {
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.94rem;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .primary-button,
@@ -249,6 +300,10 @@ h1 {
   border-radius: 8px;
   padding: 0 16px;
   cursor: pointer;
+  transition:
+    filter 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
 }
 
 .primary-button {
@@ -262,6 +317,15 @@ h1 {
   border: 1px solid var(--line);
   background: var(--panel-2);
   color: var(--text);
+}
+
+.primary-button:hover:not(:disabled),
+.secondary-button:hover:not(:disabled),
+.primary-button:focus-visible,
+.secondary-button:focus-visible {
+  border-color: var(--accent);
+  filter: brightness(1.07);
+  outline: none;
 }
 
 button:disabled {
@@ -300,5 +364,13 @@ button:disabled {
 
   .player-stage {
     min-height: 56vh;
+  }
+
+  .controls-bar {
+    grid-template-columns: 1fr;
+  }
+
+  .current-selection {
+    white-space: normal;
   }
 }
