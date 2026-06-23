@@ -5,7 +5,7 @@ import { extname, join, normalize } from "node:path";
 const HOST = "127.0.0.1";
 const PORT = Number.parseInt(process.env.PORT || "4173", 10);
 const ROOT = process.cwd();
-const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+const RECENT_WINDOW_MS = 48 * 60 * 60 * 1000;
 const CHANNELS = [
   {
     handle: "dsportsok",
@@ -111,12 +111,14 @@ const COUNTRY_NAMES = [
   "Hungría",
   "Inglaterra",
   "Irán",
+  "Irak",
   "Irlanda",
   "Islandia",
   "Israel",
   "Italia",
   "Jamaica",
   "Japón",
+  "Jordania",
   "Marruecos",
   "México",
   "Nigeria",
@@ -196,12 +198,14 @@ const COUNTRY_FLAGS = {
   Hungría: "🇭🇺",
   Inglaterra: "🏴",
   Irán: "🇮🇷",
+  Irak: "🇮🇶",
   Irlanda: "🇮🇪",
   Islandia: "🇮🇸",
   Israel: "🇮🇱",
   Italia: "🇮🇹",
   Jamaica: "🇯🇲",
   Japón: "🇯🇵",
+  Jordania: "🇯🇴",
   Marruecos: "🇲🇦",
   México: "🇲🇽",
   Nigeria: "🇳🇬",
@@ -240,8 +244,8 @@ const COUNTRY_MATCHERS = COUNTRY_NAMES.map((name) => ({
   normalized: normalizeForMatch(name),
 }));
 
-function extractCountries(title) {
-  const normalizedTitle = normalizeForMatch(decodeEntities(title));
+function countryMatchesForText(value) {
+  const normalizedTitle = normalizeForMatch(decodeEntities(value));
   const matches = COUNTRY_MATCHERS
     .map((country) => ({
       name: country.name,
@@ -259,9 +263,18 @@ function extractCountries(title) {
   return unique;
 }
 
+function extractCountries(title) {
+  const decodedTitle = decodeEntities(title);
+  const titleSegments = decodedTitle.split(/\s*[|¦]\s*/);
+  const scoreSegment = titleSegments.find((segment) => /\b\d+\s*[-–]\s*\d+\b/.test(segment));
+  const scoreCountries = scoreSegment ? countryMatchesForText(scoreSegment) : [];
+
+  return scoreCountries.length >= 2 ? scoreCountries : countryMatchesForText(decodedTitle);
+}
+
 function stripSpoilers(title) {
   const countries = extractCountries(title);
-  return countries.length >= 2 ? `Partido disponible: ${countries[0]} vs ${countries[1]}` : "Partido disponible";
+  return countries.length >= 2 ? `${countries[0]} vs ${countries[1]}` : "Partido";
 }
 
 function getCountryDetails(title) {
@@ -302,8 +315,9 @@ function parseRelativePublishTime(value) {
   if (/SEGUNDO/.test(text)) ageMs = amount * 1000;
   if (/MINUTO/.test(text)) ageMs = amount * 60 * 1000;
   if (/HORA/.test(text)) ageMs = amount * 60 * 60 * 1000;
+  if (/DIA/.test(text)) ageMs = amount * 24 * 60 * 60 * 1000;
 
-  if (ageMs === null || ageMs > ONE_DAY_MS) return null;
+  if (ageMs === null || ageMs > RECENT_WINDOW_MS) return null;
   return new Date(Date.now() - ageMs).toISOString();
 }
 
@@ -314,6 +328,30 @@ function parseDurationFromChunk(chunk) {
     "";
 
   return /^\d{1,2}(?::\d{2}){1,2}$/.test(rawText) ? rawText : null;
+}
+
+function formatDurationFromSeconds(value) {
+  const totalSeconds = Number(value);
+  if (!Number.isFinite(totalSeconds) || totalSeconds <= 0) return null;
+
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = Math.floor(totalSeconds % 60);
+  return hours > 0
+    ? `${hours}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
+    : `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+async function fetchVideoDuration(videoId) {
+  try {
+    const html = await fetchText(`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}&hl=es&gl=UY`);
+    const seconds =
+      html.match(/"lengthSeconds":"(\d+)"/)?.[1] ||
+      html.match(/"approxDurationMs":"(\d+)"/)?.[1]?.replace(/\d{3}$/, "");
+    return formatDurationFromSeconds(seconds);
+  } catch {
+    return null;
+  }
 }
 
 async function resolveChannelId(channel) {
@@ -351,7 +389,7 @@ function parseFeed(xml, channel) {
     };
   });
 
-  const cutoff = Date.now() - ONE_DAY_MS;
+  const cutoff = Date.now() - RECENT_WINDOW_MS;
   return entries.filter(
     (item) =>
       item.id &&
@@ -423,7 +461,8 @@ async function getChannelVideos(channel) {
   }
 
   for (const item of parseFeed(xml, channel)) {
-    byId.set(item.id, item);
+    const existing = byId.get(item.id);
+    byId.set(item.id, existing ? { ...item, duration: existing.duration || item.duration } : item);
   }
 
   const recentItems = [...byId.values()];
@@ -433,12 +472,18 @@ async function getChannelVideos(channel) {
       embeddable: await isEmbeddable(item.id),
     })),
   );
+  const playableItems = checkedItems.filter((entry) => entry.embeddable).map((entry) => entry.item);
+
+  await Promise.all(
+    playableItems.map(async (item) => {
+      if (!item.duration) item.duration = await fetchVideoDuration(item.id);
+    }),
+  );
 
   return {
     checkedItems,
-    items: checkedItems
-      .filter((entry) => entry.embeddable)
-      .map(({ item }) => {
+    items: playableItems
+      .map((item) => {
         const { originalTitle, ...safeItem } = item;
         return safeItem;
       }),
