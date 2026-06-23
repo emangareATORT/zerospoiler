@@ -11,17 +11,18 @@
       <section class="sidebar" aria-label="Partidos disponibles">
         <div class="brand-row">
           <div>
-            <p class="eyebrow">DSports · ESPN Fans</p>
-            <h1>Resúmenes sin resultado</h1>
+            <p class="eyebrow">by @emangare</p>
+            <h1>Zero Spoiler</h1>
+            <p class="subtitle">Partidos de las últimas 48hs</p>
           </div>
-          <button id="refreshButton" class="icon-button" type="button" title="Actualizar lista" aria-label="Actualizar lista">
+          <button id="refreshButton" class="icon-button" type="button" title="Actualizar lista" aria-label="Actualizar lista" disabled>
             ↻
           </button>
         </div>
 
         <div class="status-panel">
           <span id="statusDot" class="status-dot"></span>
-          <p id="statusText">Buscando partidos de las últimas 24 horas...</p>
+          <p id="statusText">Buscando partidos de las últimas 48 horas...</p>
         </div>
 
         <div id="matchList" class="match-list" aria-live="polite"></div>
@@ -51,16 +52,18 @@
 
         <div class="controls-bar">
           <div id="currentSelection" class="current-selection">Sin partido seleccionado</div>
-          <button id="playPauseButton" class="primary-button" type="button" disabled>Reiniciar resumen</button>
+          <button id="rewindButton" class="secondary-button" type="button" disabled>−10s</button>
+          <button id="playPauseButton" class="secondary-button" type="button" disabled>Reiniciar</button>
           <button id="audioButton" class="secondary-button" type="button" disabled>Audio: OFF</button>
-        </div>
-
-        <div class="safety-note">
-          <strong>Protección activa:</strong>
-          no se muestran miniaturas, descripciones, comentarios, títulos originales ni páginas de YouTube.
+          <button id="togglePanelButton" class="secondary-button" type="button" disabled>Ampliar</button>
         </div>
       </section>
     </main>
+
+    <footer class="app-footer" aria-label="Información del proyecto">
+      <a href="https://github.com/emangareATORT/you2beMundial" target="_blank" rel="noreferrer">GitHub</a>
+      <span>v1.2</span>
+    </footer>
 
     <script src="/app.js" defer></script>
   </body>
